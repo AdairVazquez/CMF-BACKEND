@@ -2188,7 +2188,230 @@ curl -X POST http://localhost:8000/api/v1/nfc/register \
 }
 ```
 
+# Autenticación de Dos Factores (2FA)
+
+La **Autenticación de Dos Factores (2FA)** añade una capa adicional de seguridad al proceso de inicio de sesión.  
+Además de la contraseña, el usuario debe proporcionar un **código temporal** generado por una aplicación autenticadora o enviado por otro medio.
+
+Este sistema es compatible con aplicaciones como **Google Authenticator**, **Microsoft Authenticator** o **Authy**.
+
 ---
+
+# Flujo de Autenticación
+
+1. El usuario inicia sesión con **email y contraseña**.
+2. Si el usuario tiene **2FA habilitado**, el sistema solicita un **código OTP**.
+3. El usuario introduce el código generado por su aplicación autenticadora.
+4. Si el código es válido, el sistema devuelve el **token de acceso**.
+
+---
+
+# Endpoints
+
+---
+
+## 1. Activar 2FA
+
+Genera un **QR Code** y una **clave secreta** para configurar la aplicación autenticadora.
+
+### Endpoint
+
+```
+POST /api/v1/2fa/enable
+```
+
+### Headers
+
+| Header | Valor |
+|------|------|
+| Authorization | Bearer {token} |
+
+### Respuesta exitosa (200)
+
+```json
+{
+  "success": true,
+  "message": "2FA habilitado correctamente",
+  "data": {
+    "secret": "JBSWY3DPEHPK3PXP",
+    "qr_code": "data:image/png;base64,iVBOR..."
+  }
+}
+```
+
+### Descripción
+
+- **secret** → clave secreta usada para generar códigos OTP.
+- **qr_code** → imagen QR para escanear con la aplicación autenticadora.
+
+---
+
+## 2. Verificar código 2FA
+
+Verifica el código generado por la aplicación autenticadora.
+
+### Endpoint
+
+```
+POST /api/v1/2fa/verify
+```
+
+### Body
+
+```json
+{
+  "code": "123456"
+}
+```
+
+### Respuesta exitosa (200)
+
+```json
+{
+  "success": true,
+  "message": "Código verificado correctamente"
+}
+```
+
+### Error (422)
+
+```json
+{
+  "success": false,
+  "message": "Código inválido"
+}
+```
+
+---
+
+## 3. Desactivar 2FA
+
+Permite al usuario desactivar la autenticación de dos factores.
+
+### Endpoint
+
+```
+POST /api/v1/2fa/disable
+```
+
+### Body
+
+```json
+{
+  "password": "user_password"
+}
+```
+
+### Respuesta exitosa (200)
+
+```json
+{
+  "success": true,
+  "message": "2FA desactivado correctamente"
+}
+```
+
+---
+
+# Login con 2FA
+
+Cuando un usuario con 2FA activo inicia sesión, el sistema devuelve una respuesta indicando que se requiere verificación adicional.
+
+### Endpoint
+
+```
+POST /api/v1/login
+```
+
+### Body
+
+```json
+{
+  "email": "user@email.com",
+  "password": "password"
+}
+```
+
+### Respuesta cuando 2FA está habilitado
+
+```json
+{
+  "success": true,
+  "requires_2fa": true,
+  "temp_token": "temporary_token"
+}
+```
+
+---
+
+## Verificar 2FA después del login
+
+### Endpoint
+
+```
+POST /api/v1/2fa/login
+```
+
+### Body
+
+```json
+{
+  "temp_token": "temporary_token",
+  "code": "123456"
+}
+```
+
+### Respuesta exitosa
+
+```json
+{
+  "success": true,
+  "token": "access_token",
+  "token_type": "Bearer"
+}
+```
+
+---
+
+# Códigos de Error
+
+| Código | Descripción |
+|------|------|
+|400|Solicitud inválida|
+|401|No autorizado|
+|422|Código 2FA inválido|
+|429|Demasiados intentos|
+
+---
+
+# Seguridad
+
+Para garantizar la seguridad del sistema:
+
+- Los códigos OTP expiran cada **30 segundos**.
+- Se permiten **máximo 5 intentos fallidos**.
+- El secreto 2FA se almacena **encriptado** en la base de datos.
+- El login requiere verificación adicional si el usuario tiene 2FA activo.
+
+---
+
+# Tecnologías utilizadas
+
+- Laravel
+- TOTP (Time-based One-Time Password)
+- Compatible con Google Authenticator y Microsoft Authenticator
+
+---
+
+# Ejemplo de flujo completo
+
+1. Usuario activa 2FA  
+2. Escanea QR con aplicación autenticadora  
+3. Inicia sesión normalmente  
+4. Sistema solicita código OTP  
+5. Usuario introduce código  
+6. Sistema devuelve token de acceso
+
 
 ## Autoría
 
