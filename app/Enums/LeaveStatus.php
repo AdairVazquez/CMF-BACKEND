@@ -18,4 +18,14 @@ enum LeaveStatus: string
             self::RECHAZADO => 'Rechazado',
         };
     }
+
+    public function color(): string
+    {
+        return match($this) {
+            self::PENDIENTE => 'yellow',
+            self::APROBADO_JEFE => 'blue',
+            self::APROBADO_RH => 'green',
+            self::RECHAZADO => 'red',
+        };
+    }
 }

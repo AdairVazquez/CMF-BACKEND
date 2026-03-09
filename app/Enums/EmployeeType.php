@@ -14,4 +14,12 @@ enum EmployeeType: string
             self::CONFIANZA => 'Confianza',
         };
     }
+
+    public function color(): string
+    {
+        return match($this) {
+            self::BASE => 'blue',
+            self::CONFIANZA => 'purple',
+        };
+    }
 }

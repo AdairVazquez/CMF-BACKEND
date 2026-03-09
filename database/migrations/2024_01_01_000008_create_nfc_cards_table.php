@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('nfc_cards', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->onDelete('cascade');
-            $table->foreignId('employee_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('company_id')->constrained()->onDelete('restrict');
+            $table->foreignId('employee_id')->nullable()->constrained()->onDelete('restrict');
             $table->string('card_uid')->unique();
             $table->enum('status', ['activa', 'inactiva', 'bloqueada', 'perdida'])->default('activa');
             $table->date('issued_at')->nullable();

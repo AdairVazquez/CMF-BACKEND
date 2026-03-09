@@ -13,7 +13,16 @@ enum DeviceStatus: string
         return match($this) {
             self::ACTIVO => 'Activo',
             self::INACTIVO => 'Inactivo',
-            self::MANTENIMIENTO => 'Mantenimiento',
+            self::MANTENIMIENTO => 'En Mantenimiento',
+        };
+    }
+
+    public function color(): string
+    {
+        return match($this) {
+            self::ACTIVO => 'green',
+            self::INACTIVO => 'gray',
+            self::MANTENIMIENTO => 'yellow',
         };
     }
 }

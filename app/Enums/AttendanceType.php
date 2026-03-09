@@ -14,4 +14,12 @@ enum AttendanceType: string
             self::SALIDA => 'Salida',
         };
     }
+
+    public function color(): string
+    {
+        return match($this) {
+            self::ENTRADA => 'blue',
+            self::SALIDA => 'orange',
+        };
+    }
 }

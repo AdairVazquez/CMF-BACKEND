@@ -12,6 +12,12 @@ class Company extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // Constantes de módulos premium
+    public const MODULE_ASISTENCIA = 'asistencia';
+    public const MODULE_REPORTES = 'reportes';
+    public const MODULE_AUSENCIAS = 'ausencias';
+    public const MODULE_DISPOSITIVOS = 'dispositivos';
+
     protected $fillable = [
         'name',
         'legal_name',
@@ -34,6 +40,8 @@ class Company extends Model
         'trial_ends_at' => 'date',
         'subscription_ends_at' => 'date',
     ];
+
+    protected $hidden = ['deleted_at'];
 
     public function branches(): HasMany
     {

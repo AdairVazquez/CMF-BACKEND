@@ -43,6 +43,8 @@ class Employee extends Model
         'metadata' => 'array',
     ];
 
+    protected $hidden = ['deleted_at'];
+
     protected $appends = ['full_name'];
 
     public function getFullNameAttribute(): string
@@ -110,10 +112,15 @@ class Employee extends Model
         return $this->employee_type === EmployeeType::BASE;
     }
 
+    public function isConfianza(): bool
+    {
+        return $this->employee_type === EmployeeType::CONFIANZA;
+    }
+
     public function canRequestLeave(): bool
     {
         return $this->isBase() && 
                $this->status === EmployeeStatus::ACTIVO &&
-               $this->company->hasModuleActive('leave_requests');
+               $this->company->hasModuleActive(Company::MODULE_AUSENCIAS);
     }
 }

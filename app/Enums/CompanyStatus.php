@@ -18,4 +18,14 @@ enum CompanyStatus: string
             self::PRUEBA => 'Periodo de Prueba',
         };
     }
+
+    public function color(): string
+    {
+        return match($this) {
+            self::ACTIVO => 'green',
+            self::SUSPENDIDO => 'red',
+            self::INACTIVO => 'gray',
+            self::PRUEBA => 'blue',
+        };
+    }
 }

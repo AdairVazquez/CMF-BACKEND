@@ -18,4 +18,14 @@ enum CardStatus: string
             self::PERDIDA => 'Perdida',
         };
     }
+
+    public function color(): string
+    {
+        return match($this) {
+            self::ACTIVA => 'green',
+            self::INACTIVA => 'gray',
+            self::BLOQUEADA => 'red',
+            self::PERDIDA => 'red',
+        };
+    }
 }

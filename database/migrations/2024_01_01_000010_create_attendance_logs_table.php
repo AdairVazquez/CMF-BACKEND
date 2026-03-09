@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('attendance_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->onDelete('cascade');
-            $table->foreignId('employee_id')->constrained()->onDelete('cascade');
+            $table->foreignId('company_id')->constrained()->onDelete('restrict');
+            $table->foreignId('employee_id')->constrained()->onDelete('restrict');
             $table->foreignId('device_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('nfc_card_id')->nullable()->constrained()->onDelete('set null');
             $table->enum('type', ['entrada', 'salida']);

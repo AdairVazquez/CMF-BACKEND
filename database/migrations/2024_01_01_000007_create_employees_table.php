@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->foreignId('company_id')->constrained()->onDelete('restrict');
             $table->foreignId('branch_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('department_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('shift_id')->nullable()->constrained()->onDelete('set null');

@@ -18,4 +18,14 @@ enum EmployeeStatus: string
             self::SUSPENDIDO => 'Suspendido',
         };
     }
+
+    public function color(): string
+    {
+        return match($this) {
+            self::ACTIVO => 'green',
+            self::INACTIVO => 'gray',
+            self::BAJA => 'red',
+            self::SUSPENDIDO => 'red',
+        };
+    }
 }

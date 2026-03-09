@@ -29,6 +29,8 @@ class NfcCard extends Model
         'expires_at' => 'date',
     ];
 
+    protected $hidden = ['deleted_at'];
+
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
@@ -57,5 +59,10 @@ class NfcCard extends Model
     public function isActive(): bool
     {
         return $this->status === CardStatus::ACTIVA;
+    }
+
+    public function isAvailable(): bool
+    {
+        return $this->status === CardStatus::ACTIVA && is_null($this->employee_id);
     }
 }

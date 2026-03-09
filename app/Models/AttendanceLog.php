@@ -82,4 +82,28 @@ class AttendanceLog extends Model
     {
         return $query->whereBetween('recorded_at', [$startDate, $endDate]);
     }
+
+    /**
+     * Calcula las horas trabajadas entre entrada y salida del mismo día
+     * Usar en combinación con un par entrada-salida
+     */
+    public function getWorkedHoursAttribute(): ?float
+    {
+        // Este método se usa típicamente con la entrada y su respectiva salida
+        // Para calcular horas completas del día, usar un método en el servicio
+        if ($this->type === AttendanceType::ENTRADA) {
+            $exit = self::where('employee_id', $this->employee_id)
+                ->where('type', AttendanceType::SALIDA)
+                ->where('recorded_at', '>', $this->recorded_at)
+                ->whereDate('recorded_at', $this->recorded_at->toDateString())
+                ->orderBy('recorded_at')
+                ->first();
+
+            if ($exit) {
+                return $this->recorded_at->diffInHours($exit->recorded_at, true);
+            }
+        }
+
+        return null;
+    }
 }

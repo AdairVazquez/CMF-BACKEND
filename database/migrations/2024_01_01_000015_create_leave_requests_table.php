@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('leave_requests', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->onDelete('cascade');
-            $table->foreignId('employee_id')->constrained()->onDelete('cascade');
+            $table->foreignId('company_id')->constrained()->onDelete('restrict');
+            $table->foreignId('employee_id')->constrained()->onDelete('restrict');
             $table->enum('status', ['pendiente', 'aprobado_jefe', 'aprobado_rh', 'rechazado'])->default('pendiente');
             $table->string('leave_type'); // Vacaciones, permiso, enfermedad, etc.
             $table->date('start_date');

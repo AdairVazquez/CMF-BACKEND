@@ -23,7 +23,7 @@ class CompanySeeder extends Seeder
                 'plan' => 'premium',
                 'status' => CompanyStatus::ACTIVO,
                 'timezone' => 'America/Mexico_City',
-                'modules' => ['attendance', 'reports', 'leave_requests', 'devices', 'geolocation'],
+                'modules' => [Company::MODULE_ASISTENCIA, Company::MODULE_REPORTES, Company::MODULE_AUSENCIAS, Company::MODULE_DISPOSITIVOS],
                 'trial_ends_at' => null,
                 'subscription_ends_at' => now()->addYear(),
             ]
@@ -31,11 +31,10 @@ class CompanySeeder extends Seeder
 
         // Módulos activos para Hospital Central
         $hospitalModules = [
-            ['module_name' => 'attendance', 'is_active' => true, 'activated_at' => now()],
-            ['module_name' => 'reports', 'is_active' => true, 'activated_at' => now()],
-            ['module_name' => 'leave_requests', 'is_active' => true, 'activated_at' => now()],
-            ['module_name' => 'devices', 'is_active' => true, 'activated_at' => now()],
-            ['module_name' => 'geolocation', 'is_active' => true, 'activated_at' => now()],
+            ['module_name' => Company::MODULE_ASISTENCIA, 'is_active' => true, 'activated_at' => now()],
+            ['module_name' => Company::MODULE_REPORTES, 'is_active' => true, 'activated_at' => now()],
+            ['module_name' => Company::MODULE_AUSENCIAS, 'is_active' => true, 'activated_at' => now()],
+            ['module_name' => Company::MODULE_DISPOSITIVOS, 'is_active' => true, 'activated_at' => now()],
         ];
 
         foreach ($hospitalModules as $moduleData) {
@@ -60,7 +59,7 @@ class CompanySeeder extends Seeder
                 'plan' => 'basic',
                 'status' => CompanyStatus::ACTIVO,
                 'timezone' => 'America/Mexico_City',
-                'modules' => ['attendance', 'reports', 'devices'],
+                'modules' => [Company::MODULE_ASISTENCIA, Company::MODULE_REPORTES, Company::MODULE_DISPOSITIVOS],
                 'trial_ends_at' => null,
                 'subscription_ends_at' => now()->addMonths(6),
             ]
@@ -68,9 +67,9 @@ class CompanySeeder extends Seeder
 
         // Módulos activos para Empresa Demo
         $demoModules = [
-            ['module_name' => 'attendance', 'is_active' => true, 'activated_at' => now()],
-            ['module_name' => 'reports', 'is_active' => true, 'activated_at' => now()],
-            ['module_name' => 'devices', 'is_active' => true, 'activated_at' => now()],
+            ['module_name' => Company::MODULE_ASISTENCIA, 'is_active' => true, 'activated_at' => now()],
+            ['module_name' => Company::MODULE_REPORTES, 'is_active' => true, 'activated_at' => now()],
+            ['module_name' => Company::MODULE_DISPOSITIVOS, 'is_active' => true, 'activated_at' => now()],
         ];
 
         foreach ($demoModules as $moduleData) {
