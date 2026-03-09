@@ -34,7 +34,10 @@ Route::prefix('v1')->group(function () {
     // Recuperación de contraseña
     Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])
         ->middleware('throttle:5,1');
-    
+
+    Route::post('/auth/verify-reset-code', [AuthController::class, 'verifyResetCode'])
+        ->middleware('throttle:5,1');
+
     Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])
         ->middleware('throttle:5,1');
     
