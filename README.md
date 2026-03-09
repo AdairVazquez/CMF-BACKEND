@@ -1,4 +1,4 @@
-# CMF - Control y Monitoreo de Fuerza Laboral
+# CMF - Control y MonitoreoLaboral
 
 Sistema SaaS white-label de control de accesos y asistencia laboral mediante tarjetas NFC. Diseñado para operar en hospitales, fábricas, universidades e instituciones que requieren gestión automatizada de asistencia y control de accesos.
 
