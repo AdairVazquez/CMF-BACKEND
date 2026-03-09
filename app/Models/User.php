@@ -23,21 +23,51 @@ class User extends Authenticatable
         'phone',
         'is_super_admin',
         'is_active',
+        'last_login_at',
+        'last_login_ip',
+        'last_login_device',
+        'email_verified_at',
+        'two_factor_enabled',
+        'two_factor_confirmed_at',
+        'two_factor_recovery_codes',
+        'two_factor_secret',
+        'password_reset_token',
+        'password_reset_expires_at',
+        'failed_login_attempts',
+        'locked_until',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'password_reset_token',
         'deleted_at',
     ];
 
     protected function casts(): array
     {
-        return [
+        $casts = [
             'password' => 'hashed',
             'is_super_admin' => 'boolean',
             'is_active' => 'boolean',
+            'two_factor_enabled' => 'boolean',
+            'two_factor_confirmed_at' => 'datetime',
+            'last_login_at' => 'datetime',
+            'locked_until' => 'datetime',
+            'email_verified_at' => 'datetime',
+            'password_reset_expires_at' => 'datetime',
+            'failed_login_attempts' => 'integer',
         ];
+
+        // Solo encriptar si APP_KEY está configurada
+        if (config('app.key')) {
+            $casts['two_factor_secret'] = 'encrypted';
+            $casts['two_factor_recovery_codes'] = 'encrypted';
+        }
+
+        return $casts;
     }
 
     public function company(): BelongsTo
@@ -107,5 +137,42 @@ class User extends Authenticatable
     public function assignRole(Role $role): void
     {
         $this->roles()->syncWithoutDetaching($role);
+    }
+
+    public function hasTwoFactorEnabled(): bool
+    {
+        return $this->two_factor_enabled && $this->two_factor_confirmed_at !== null;
+    }
+
+    public function isAccountLocked(): bool
+    {
+        return $this->locked_until !== null && $this->locked_until->isFuture();
+    }
+
+    public function incrementFailedLoginAttempts(): void
+    {
+        $this->increment('failed_login_attempts');
+        
+        if ($this->failed_login_attempts >= 5) {
+            $this->locked_until = now()->addMinutes(15);
+            $this->save();
+        }
+    }
+
+    public function resetFailedLoginAttempts(): void
+    {
+        $this->update([
+            'failed_login_attempts' => 0,
+            'locked_until' => null,
+        ]);
+    }
+
+    public function updateLoginInfo(string $ip, string $device): void
+    {
+        $this->update([
+            'last_login_at' => now(),
+            'last_login_ip' => $ip,
+            'last_login_device' => $device,
+        ]);
     }
 }

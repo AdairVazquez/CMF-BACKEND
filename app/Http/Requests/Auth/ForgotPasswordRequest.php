@@ -4,7 +4,7 @@ namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class LoginRequest extends FormRequest
+class ForgotPasswordRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -15,8 +15,6 @@ class LoginRequest extends FormRequest
     {
         return [
             'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
-            'device_name' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -25,7 +23,6 @@ class LoginRequest extends FormRequest
         return [
             'email.required' => 'El email es obligatorio',
             'email.email' => 'El email debe ser válido',
-            'password.required' => 'La contraseña es obligatoria',
         ];
     }
 }

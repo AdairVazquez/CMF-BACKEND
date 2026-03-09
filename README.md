@@ -11,6 +11,7 @@ La arquitectura multi-tenant garantiza que cada empresa cliente tenga sus datos 
 ## Características principales
 
 - **Multi-tenant:** Aislamiento total de datos por empresa mediante `company_id`
+- **Autenticación enterprise:** 2FA con TOTP, bloqueo automático, recovery codes
 - **Registro automático NFC:** Captura de asistencia sin intervención manual
 - **Jerarquía de roles:** Sistema de permisos granulares con 7 niveles de acceso
 - **Módulos premium:** Activación selectiva de funcionalidades por cliente
@@ -20,6 +21,7 @@ La arquitectura multi-tenant garantiza que cada empresa cliente tenga sus datos 
 - **Geolocalización:** Registro de ubicación GPS en cada marcaje (opcional)
 - **API REST:** Interfaz completa para integración con sistemas externos
 - **Dashboard responsive:** Panel de administración construido con Next.js 15
+- **Resiliencia integrada:** Fallback automático Redis → Database/File
 
 ## Stack tecnológico
 
@@ -33,7 +35,8 @@ La arquitectura multi-tenant garantiza que cada empresa cliente tenga sus datos 
 | **Cache** | Redis | 7.x |
 | **Colas** | Laravel Horizon | 5.x |
 | **WebSockets** | Laravel Reverb | 1.x |
-| **Autenticación** | Laravel Sanctum | 4.x |
+| **Autenticación** | Laravel Sanctum + 2FA | 4.x |
+| **2FA** | PragmaRX Google2FA | 8.x |
 | **CSS** | Tailwind CSS | 4.x |
 | **Estado global** | Zustand | 5.x |
 | **Consultas** | TanStack Query | 5.x |
@@ -158,6 +161,85 @@ system-core-api/
 - Tokenizer
 - XML
 - Redis
+
+## Sistema de Autenticación Enterprise
+
+El proyecto incluye un sistema completo de autenticación con características de nivel enterprise:
+
+### 🔐 Características de Seguridad
+
+#### Autenticación Básica
+- Login con email y contraseña
+- Tokens JWT con Laravel Sanctum
+- Rate limiting por endpoint (5 requests/min en login)
+- Tracking de dispositivos y ubicaciones
+
+#### Autenticación de Dos Factores (2FA)
+- Implementación TOTP con Google Authenticator/Authy
+- Generación de QR code automática
+- 8 códigos de recuperación encriptados
+- Formato: `XXXX-XXXX-XXXX`
+
+#### Protección contra Ataques
+- Bloqueo automático tras 5 intentos fallidos (15 min)
+- Notificaciones por email en eventos críticos
+- Headers de seguridad HTTP configurados
+- Nunca revela si un email existe
+
+#### Recuperación de Contraseña
+- Código de 6 dígitos enviado por email
+- Expiración automática (15 minutos)
+- Cierre de todas las sesiones al cambiar password
+- Validación de contraseñas fuertes (mayúsculas + números + símbolos)
+
+#### Logs de Auditoría
+Todos los eventos de seguridad se registran en `storage/logs/security-{date}.log`:
+- Login exitoso/fallido
+- Cuenta bloqueada
+- 2FA activado/desactivado
+- Recovery code usado
+- Password cambiado
+- Logout
+
+### 📡 Endpoints Disponibles
+
+#### Públicos (sin autenticación)
+```
+POST /api/v1/auth/login
+POST /api/v1/auth/two-factor/verify
+POST /api/v1/auth/two-factor/recovery
+POST /api/v1/auth/forgot-password
+POST /api/v1/auth/reset-password
+```
+
+#### Protegidos (requieren token)
+```
+GET  /api/v1/auth/me
+POST /api/v1/auth/refresh
+POST /api/v1/auth/logout
+POST /api/v1/auth/logout-all
+POST /api/v1/auth/two-factor/enable
+POST /api/v1/auth/two-factor/confirm
+POST /api/v1/auth/two-factor/disable
+```
+
+### 🧪 Pruebas de Autenticación
+
+**Script automatizado PowerShell:**
+```bash
+.\test-auth.ps1
+```
+
+**Prueba manual (login):**
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/auth/login" `
+  -Method POST -ContentType "application/json" `
+  -Body '{"email":"joshuapaz24@gmail.com","password":"password"}' | ConvertTo-Json
+```
+
+**Documentación completa:**
+- `docs/AUTH_IMPLEMENTATION_SUMMARY.md` - Resumen de implementación
+- `docs/AUTH_TESTING.md` - Guía de testing con ejemplos curl
 
 ## Instalación local
 
@@ -344,6 +426,12 @@ Después de ejecutar los seeders, estarán disponibles los siguientes usuarios:
 | rh@hospital.com | password | Recursos Humanos | Hospital Central | Empleados y asistencia |
 | jefe@hospital.com | password | Jefe de Área | Hospital Central | Su departamento |
 | operador@hospital.com | password | Operador | Hospital Central | Dispositivos |
+| joshuapaz24@gmail.com | password | Director | Hospital Central | Toda la empresa |
+
+**Crear usuarios adicionales:**
+```bash
+php artisan user:create email@ejemplo.com "Nombre Completo" --role=director
+```
 
 **Datos de prueba incluidos:**
 - 2 empresas (Hospital Central, Empresa Demo)

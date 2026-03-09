@@ -3,82 +3,209 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\LogoutAllRequest;
+use App\Http\Requests\Auth\ResetPasswordRequest;
+use App\Http\Requests\Auth\TwoFactorConfirmRequest;
+use App\Http\Requests\Auth\TwoFactorDisableRequest;
+use App\Http\Requests\Auth\TwoFactorRecoveryRequest;
+use App\Http\Requests\Auth\TwoFactorVerifyRequest;
 use App\Services\AuthService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
     use ApiResponse;
 
-    protected AuthService $authService;
-
-    public function __construct(AuthService $authService)
-    {
-        $this->authService = $authService;
-    }
+    public function __construct(
+        private AuthService $authService
+    ) {}
 
     /**
-     * POST /api/v1/auth/login
-     * Iniciar sesión y obtener token de acceso
+     * Login con email y password
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        try {
-            $result = $this->authService->login($request->validated());
+        $result = $this->authService->login(
+            email: $request->email,
+            password: $request->password,
+            ip: $request->ip(),
+            device: $request->device_name ?? $request->header('User-Agent')
+        );
 
-            return $this->successResponse(
-                $result,
-                'Inicio de sesión exitoso'
-            );
-        } catch (ValidationException $e) {
+        if (!$result['success']) {
             return $this->errorResponse(
-                $e->getMessage(),
-                $e->errors(),
-                401
+                $result['message'],
+                [],
+                isset($result['locked']) ? 423 : 401
             );
         }
+
+        if (isset($result['requires_2fa']) && $result['requires_2fa']) {
+            return $this->successResponse([
+                'requires_2fa' => true,
+                'token' => $result['token'],
+            ], $result['message']);
+        }
+
+        return $this->successResponse([
+            'token' => $result['token'],
+            'user' => $result['user'],
+        ], $result['message']);
     }
 
     /**
-     * POST /api/v1/auth/logout
-     * Cerrar sesión y revocar token actual
+     * Verificar código 2FA
      */
-    public function logout(Request $request): JsonResponse
+    public function verify2FA(TwoFactorVerifyRequest $request): JsonResponse
     {
-        $this->authService->logout($request->user());
-
-        return $this->successResponse(
-            null,
-            'Sesión cerrada correctamente'
+        $result = $this->authService->verify2FA(
+            token: $request->token,
+            code: $request->code
         );
+
+        if (!$result['success']) {
+            return $this->errorResponse($result['message'], [], 401);
+        }
+
+        return $this->successResponse([
+            'token' => $result['token'],
+            'user' => $result['user'],
+        ], $result['message']);
     }
 
     /**
-     * GET /api/v1/auth/me
-     * Obtener información del usuario autenticado
+     * Usar código de recuperación 2FA
+     */
+    public function useRecoveryCode(TwoFactorRecoveryRequest $request): JsonResponse
+    {
+        $result = $this->authService->useRecoveryCode(
+            token: $request->token,
+            recoveryCode: $request->recovery_code
+        );
+
+        if (!$result['success']) {
+            return $this->errorResponse($result['message'], [], 401);
+        }
+
+        return $this->successResponse([
+            'token' => $result['token'],
+            'user' => $result['user'],
+            'remaining_codes' => $result['remaining_codes'],
+        ], $result['message']);
+    }
+
+    /**
+     * Habilitar 2FA por correo (envía código al email)
+     */
+    public function enable2FA(Request $request): JsonResponse
+    {
+        $result = $this->authService->enable2FA($request->user());
+
+        return $this->successResponse(null, $result['message']);
+    }
+
+    /**
+     * Confirmar y activar 2FA
+     */
+    public function confirm2FA(TwoFactorConfirmRequest $request): JsonResponse
+    {
+        $result = $this->authService->confirm2FA(
+            user: $request->user(),
+            code: $request->code
+        );
+
+        if (!$result['success']) {
+            return $this->errorResponse($result['message'], [], 400);
+        }
+
+        return $this->successResponse([
+            'recovery_codes' => $result['recovery_codes'],
+        ], $result['message']);
+    }
+
+    /**
+     * Desactivar 2FA
+     */
+    public function disable2FA(TwoFactorDisableRequest $request): JsonResponse
+    {
+        $result = $this->authService->disable2FA($request->user());
+
+        return $this->successResponse(null, $result['message']);
+    }
+
+    /**
+     * Obtener datos del usuario autenticado
      */
     public function me(Request $request): JsonResponse
     {
-        $result = $this->authService->me($request->user());
+        $user = $request->user()->load(['roles.permissions', 'company']);
 
-        return $this->successResponse($result);
+        return $this->successResponse([
+            'user' => $user,
+        ], 'Usuario autenticado');
     }
 
     /**
-     * POST /api/v1/auth/refresh
-     * Refrescar token de acceso
+     * Cerrar sesión actual
+     */
+    public function logout(Request $request): JsonResponse
+    {
+        $result = $this->authService->logout($request->user());
+
+        return $this->successResponse(null, $result['message']);
+    }
+
+    /**
+     * Cerrar todas las sesiones
+     */
+    public function logoutAll(LogoutAllRequest $request): JsonResponse
+    {
+        $result = $this->authService->logoutAllDevices($request->user());
+
+        return $this->successResponse(null, $result['message']);
+    }
+
+    /**
+     * Solicitar recuperación de contraseña
+     */
+    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
+    {
+        $result = $this->authService->forgotPassword($request->email);
+
+        return $this->successResponse(null, $result['message']);
+    }
+
+    /**
+     * Restablecer contraseña con código
+     */
+    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    {
+        $result = $this->authService->resetPassword(
+            email: $request->email,
+            code: $request->code,
+            newPassword: $request->password
+        );
+
+        if (!$result['success']) {
+            return $this->errorResponse($result['message'], [], 400);
+        }
+
+        return $this->successResponse(null, $result['message']);
+    }
+
+    /**
+     * Refrescar información del usuario
      */
     public function refresh(Request $request): JsonResponse
     {
-        $result = $this->authService->refresh($request->user());
+        $user = $request->user()->load(['roles.permissions', 'company']);
 
-        return $this->successResponse(
-            $result,
-            'Token refrescado exitosamente'
-        );
+        return $this->successResponse([
+            'user' => $user,
+        ], 'Datos actualizados');
     }
 }

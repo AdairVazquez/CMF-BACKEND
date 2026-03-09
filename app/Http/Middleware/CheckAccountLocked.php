@@ -5,17 +5,19 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 
-class TenantScope
+class CheckAccountLocked
 {
     public function handle(Request $request, Closure $next)
     {
         $user = $request->user();
 
-        if ($user && !$user->is_super_admin && !$user->company_id) {
+        if ($user && $user->isAccountLocked()) {
+            $minutes = now()->diffInMinutes($user->locked_until);
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Usuario sin empresa asignada',
-            ], 403);
+                'message' => "Cuenta bloqueada. Intenta de nuevo en {$minutes} minutos.",
+            ], 423);
         }
 
         return $next($request);

@@ -86,7 +86,7 @@ return [
         'security' => [
             'driver' => 'daily',
             'path' => storage_path('logs/security.log'),
-            'level' => 'warning',
+            'level' => 'info',
             'days' => 90,
             'replace_placeholders' => true,
         ],
@@ -106,6 +106,15 @@ return [
             'path' => storage_path('logs/queue.log'),
             'level' => 'error',
             'days' => 14,
+            'replace_placeholders' => true,
+        ],
+
+        // Canal para envío de correos (pruebas y resultados)
+        'mail' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/mail.log'),
+            'level' => 'info',
+            'days' => 30,
             'replace_placeholders' => true,
         ],
 

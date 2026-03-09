@@ -16,6 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenant.scope' => \App\Http\Middleware\TenantScope::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,
+            'account.locked' => \App\Http\Middleware\CheckAccountLocked::class,
+            'two.factor' => \App\Http\Middleware\TwoFactorMiddleware::class,
         ]);
 
         // Headers de seguridad global
