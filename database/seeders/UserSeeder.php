@@ -26,8 +26,9 @@ class UserSeeder extends Seeder
         $roleJefeArea = Role::where('slug', 'jefe_area')->first();
         $roleOperador = Role::where('slug', 'operador')->first();
 
-        // Crear usuarios de prueba
+        // Usuarios de prueba (originales) + usuarios reales
         $users = [
+            // --- Usuarios de prueba originales ---
             [
                 'name' => 'Super Admin',
                 'email' => 'super@saas.com',
@@ -77,6 +78,57 @@ class UserSeeder extends Seeder
                 'is_active' => true,
                 'role' => $roleOperador,
             ],
+            // --- Usuarios reales ---
+            [
+                'name' => 'Joshua Getzael Paz Sanchez',
+                'email' => 'joshuapaz24@gmail.com',
+                'password' => Hash::make('CMF@2026!'),
+                'company_id' => null,
+                'is_super_admin' => true,
+                'is_active' => true,
+                'two_factor_enabled' => false,
+                'role' => $roleSuperAdmin,
+            ],
+            [
+                'name' => 'Adair Vazquez',
+                'email' => 'Adairvazquezcr@gmail.com',
+                'password' => Hash::make('CMF@2026!'),
+                'company_id' => $hospital->id,
+                'is_super_admin' => false,
+                'is_active' => true,
+                'two_factor_enabled' => false,
+                'role' => $roleDirector,
+            ],
+            [
+                'name' => 'Chris Aban',
+                'email' => 'chrisaban08@gmail.com',
+                'password' => Hash::make('CMF@2026!'),
+                'company_id' => $hospital->id,
+                'is_super_admin' => false,
+                'is_active' => true,
+                'two_factor_enabled' => false,
+                'role' => $roleRH,
+            ],
+            [
+                'name' => 'Joshua Alt',
+                'email' => 'joshuapaz2412@gmail.com',
+                'password' => Hash::make('CMF@2026!'),
+                'company_id' => $hospital->id,
+                'is_super_admin' => false,
+                'is_active' => true,
+                'two_factor_enabled' => false,
+                'role' => $roleJefeArea,
+            ],
+            [
+                'name' => 'Joshua Test',
+                'email' => 'joshuapaz1224@gmail.com',
+                'password' => Hash::make('CMF@2026!'),
+                'company_id' => $hospital->id,
+                'is_super_admin' => false,
+                'is_active' => true,
+                'two_factor_enabled' => false,
+                'role' => $roleOperador,
+            ],
         ];
 
         $createdUsers = [];
@@ -98,13 +150,18 @@ class UserSeeder extends Seeder
         }
 
         $this->command->info('✅ Usuarios creados exitosamente');
-        $this->command->info('   - ' . count($createdUsers) . ' usuarios creados');
-        $this->command->info('   - Password para todos: password');
+        $this->command->info('   - ' . count($createdUsers) . ' usuarios procesados');
         $this->command->newLine();
         $this->command->info('📧 Credenciales de acceso:');
-        foreach ($createdUsers as $user) {
-            $roleName = $user->roles->first()?->name ?? 'Sin rol';
-            $this->command->info("   - {$user->email} ({$roleName})");
-        }
+        $this->command->info('   [Prueba]    super@saas.com / password');
+        $this->command->info('   [Prueba]    director@hospital.com / password');
+        $this->command->info('   [Prueba]    rh@hospital.com / password');
+        $this->command->info('   [Prueba]    jefe@hospital.com / password');
+        $this->command->info('   [Prueba]    operador@hospital.com / password');
+        $this->command->info('   [Real]      joshuapaz24@gmail.com / CMF@2026!');
+        $this->command->info('   [Real]      Adairvazquezcr@gmail.com / CMF@2026!');
+        $this->command->info('   [Real]      chrisaban08@gmail.com / CMF@2026!');
+        $this->command->info('   [Real]      joshuapaz2412@gmail.com / CMF@2026!');
+        $this->command->info('   [Real]      joshuapaz1224@gmail.com / CMF@2026!');
     }
 }
