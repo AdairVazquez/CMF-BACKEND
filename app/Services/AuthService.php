@@ -100,39 +100,39 @@ class AuthService
 
         $user->resetFailedLoginAttempts();
 
-        if ($user->hasTwoFactorEnabled()) {
-            $twoFactorToken = Str::uuid()->toString();
+        // Primera vez: 2FA no activado → enviar código al correo para activarlo
+        if (!$user->two_factor_enabled) {
+            $tempToken = Str::uuid()->toString();
+            $emailCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-            Cache::put("2fa_token:{$twoFactorToken}", [
-                'user_id' => $user->id,
-                'ip'      => $ip,
-                'device'  => $device,
+            Cache::put("2fa_token:{$tempToken}", [
+                'user_id'    => $user->id,
+                'ip'         => $ip,
+                'device'     => $device,
+                'email_code' => Hash::make($emailCode),
+                'is_setup'   => true,
             ], now()->addMinutes(self::CODE_EXPIRY_MINUTES));
 
-            Log::channel('security')->info('Login successful - 2FA required (TOTP)', [
+            $user->notify(new \App\Notifications\Auth\TwoFactorCodeNotification($emailCode, self::CODE_EXPIRY_MINUTES, 'login'));
+
+            Log::channel('security')->info('Login - 2FA setup code sent', [
                 'user_id' => $user->id,
                 'email'   => $user->email,
                 'ip'      => $ip,
             ]);
 
             return [
-                'success'      => true,
-                'requires_2fa' => true,
-                'token'        => $twoFactorToken,
-                'message'      => 'Ingresa el código de 6 dígitos de tu app autenticadora (Google Authenticator o Authy)',
+                'success'            => true,
+                'requires_2fa_setup' => true,
+                'token'              => $tempToken,
+                'message'            => 'Te hemos enviado un código de verificación a tu correo para activar el 2FA',
             ];
         }
 
+        // Login normal: 2FA ya activo → acceso directo
         $token = $user->createToken($device ?? 'default')->plainTextToken;
         $user->updateLoginInfo($ip, $device);
-
-        if ($user->last_login_ip !== $ip || $user->last_login_device !== $device) {
-            $user->notify(new LoginSuccessNotification(
-                $ip,
-                $device,
-                now()->format('d/m/Y H:i:s')
-            ));
-        }
+        $user->notify(new LoginSuccessNotification($ip, $device, now()->format('d/m/Y H:i:s')));
 
         Log::channel('security')->info('Login successful', [
             'user_id' => $user->id,
@@ -150,7 +150,7 @@ class AuthService
     }
 
     /**
-     * Verificar código TOTP de app autenticadora durante el login
+     * Verificar código enviado por email durante el login
      */
     public function verify2FA(string $token, string $code): array
     {
@@ -164,8 +164,9 @@ class AuthService
         }
 
         $user = User::find($data['user_id']);
+        $isSetup = !empty($data['is_setup']);
 
-        if (!$user || !$user->hasTwoFactorEnabled()) {
+        if (!$user || (!$isSetup && !$user->hasTwoFactorEnabled())) {
             Cache::forget("2fa_token:{$token}");
 
             return [
@@ -174,13 +175,11 @@ class AuthService
             ];
         }
 
-        $google2fa = new Google2FA();
-        $valid = $google2fa->verifyKey($user->two_factor_secret, $code);
-
-        if (!$valid) {
-            Log::channel('security')->warning('Invalid TOTP code on login', [
+        if (!isset($data['email_code']) || !Hash::check($code, $data['email_code'])) {
+            Log::channel('security')->warning('Invalid email code', [
                 'user_id' => $user->id,
                 'email'   => $user->email,
+                'is_setup' => $isSetup,
             ]);
 
             return [
@@ -191,19 +190,28 @@ class AuthService
 
         Cache::forget("2fa_token:{$token}");
 
+        // Si es primer login: activar 2FA
+        if ($isSetup) {
+            $user->update([
+                'two_factor_enabled'      => true,
+                'two_factor_confirmed_at' => now(),
+            ]);
+
+            Log::channel('security')->info('2FA activated via first login', [
+                'user_id' => $user->id,
+                'email'   => $user->email,
+            ]);
+        }
+
         $authToken = $user->createToken($data['device'] ?? 'default')->plainTextToken;
         $user->updateLoginInfo($data['ip'], $data['device']);
 
-        Log::channel('security')->info('2FA verified successfully (TOTP)', [
-            'user_id' => $user->id,
-            'email'   => $user->email,
-        ]);
-
         return [
-            'success' => true,
-            'token'   => $authToken,
-            'user'    => $user->load('roles'),
-            'message' => 'Autenticación completada',
+            'success'   => true,
+            'token'     => $authToken,
+            'user'      => $user->load('roles'),
+            'is_setup'  => $isSetup,
+            'message'   => $isSetup ? '¡2FA activado! Bienvenido al sistema.' : 'Autenticación completada',
         ];
     }
 
@@ -280,82 +288,38 @@ class AuthService
     }
 
     /**
-     * Iniciar configuración de 2FA con TOTP:
-     * Genera un secreto TOTP y devuelve el QR code para escanear con Google Authenticator / Authy
+     * Activar 2FA por email: marca la cuenta con 2FA habilitado directamente.
+     * No requiere app autenticadora ni escaneo de QR.
      */
     public function enable2FA(User $user): array
     {
-        $google2fa = new Google2FAQRCode();
-        $secret    = $google2fa->generateSecretKey();
-
-        // Guardar secreto temporal (no confirmado todavía)
         $user->update([
-            'two_factor_secret'       => $secret,
-            'two_factor_enabled'      => false,
-            'two_factor_confirmed_at' => null,
+            'two_factor_secret'        => null,
+            'two_factor_enabled'       => true,
+            'two_factor_confirmed_at'  => now(),
+            'two_factor_recovery_codes' => null,
         ]);
 
-        $qrCode = $google2fa->getQRCodeInline(
-            config('app.name'),
-            $user->email,
-            $secret
-        );
+        $user->notify(new \App\Notifications\Auth\TwoFactorEnabledNotification());
 
-        Log::channel('security')->info('2FA setup initiated (TOTP)', [
+        Log::channel('security')->info('2FA enabled (email)', [
             'user_id' => $user->id,
             'email'   => $user->email,
         ]);
 
         return [
             'success' => true,
-            'qr_code' => $qrCode,
-            'secret'  => $secret,
-            'message' => 'Escanea el código QR con Google Authenticator o Authy, luego confirma con un código de 6 dígitos',
+            'message' => 'Autenticación de dos factores activada. Al iniciar sesión recibirás un código en tu correo.',
         ];
     }
 
     /**
-     * Confirmar activación de 2FA verificando el código TOTP de la app
+     * Confirmar activación de 2FA — con email 2FA ya no se requiere este paso.
+     * Se mantiene por compatibilidad; delega a enable2FA.
      */
     public function confirm2FA(User $user, string $code): array
     {
-        if (!$user->two_factor_secret) {
-            return [
-                'success' => false,
-                'message' => 'Primero debes iniciar la configuración de 2FA',
-            ];
-        }
-
-        $google2fa = new Google2FA();
-        $valid     = $google2fa->verifyKey($user->two_factor_secret, $code);
-
-        if (!$valid) {
-            return [
-                'success' => false,
-                'message' => 'Código incorrecto. Verifica que tu app esté sincronizada con la hora correcta.',
-            ];
-        }
-
-        $recoveryCodes = $this->generateRecoveryCodes();
-
-        $user->update([
-            'two_factor_enabled'       => true,
-            'two_factor_confirmed_at'  => now(),
-            'two_factor_recovery_codes' => json_encode($recoveryCodes),
-        ]);
-
-        $user->notify(new TwoFactorEnabledNotification());
-
-        Log::channel('security')->info('2FA enabled successfully (TOTP)', [
-            'user_id' => $user->id,
-            'email'   => $user->email,
-        ]);
-
-        return [
-            'success'        => true,
-            'recovery_codes' => $recoveryCodes,
-            'message'        => 'Autenticación de dos factores activada correctamente. Guarda estos códigos de recuperación en un lugar seguro.',
-        ];
+        return $this->enable2FA($user);
     }
 
     /**

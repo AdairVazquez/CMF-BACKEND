@@ -45,16 +45,17 @@ class AuthController extends Controller
             );
         }
 
-        if (isset($result['requires_2fa']) && $result['requires_2fa']) {
+        // Primer login sin 2FA: igual que flujo 2FA normal, solo token temporal
+        if (!empty($result['requires_2fa_setup'])) {
             return $this->successResponse([
-                'requires_2fa' => true,
-                'token' => $result['token'],
+                'requires_2fa_setup' => true,
+                'token'              => $result['token'],
             ], $result['message']);
         }
 
         return $this->successResponse([
             'token' => $result['token'],
-            'user' => $result['user'],
+            'user'  => $result['user'],
         ], $result['message']);
     }
 
@@ -73,8 +74,9 @@ class AuthController extends Controller
         }
 
         return $this->successResponse([
-            'token' => $result['token'],
-            'user' => $result['user'],
+            'token'    => $result['token'],
+            'user'     => $result['user'],
+            'is_setup' => $result['is_setup'] ?? false,
         ], $result['message']);
     }
 
@@ -110,10 +112,7 @@ class AuthController extends Controller
             return $this->errorResponse($result['message'], [], 400);
         }
 
-        return $this->successResponse([
-            'qr_code' => $result['qr_code'],
-            'secret'  => $result['secret'],
-        ], $result['message']);
+        return $this->successResponse([], $result['message']);
     }
 
     /**
@@ -130,9 +129,7 @@ class AuthController extends Controller
             return $this->errorResponse($result['message'], [], 400);
         }
 
-        return $this->successResponse([
-            'recovery_codes' => $result['recovery_codes'],
-        ], $result['message']);
+        return $this->successResponse([], $result['message']);
     }
 
     /**
