@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\HasTenantScope;
 use App\Enums\EmployeeStatus;
 use App\Enums\EmployeeType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasTenantScope;
 
     protected $fillable = [
         'company_id',
