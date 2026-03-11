@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\EmployeeController;
 use App\Http\Controllers\Api\V1\LeaveRequestController;
 use App\Http\Controllers\Api\V1\ReportController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\CompanyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -104,4 +105,15 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(functio
     //     // Empresas, sucursales, empleados, etc.
     // });
 >>>>>>> 6de5c82 (Implementacion de documentacion de 2AF y archivo api más su configuración para futuras conexiones)
+});
+
+
+Route::prefix('v1')->group(function () {
+    
+    // Ruta para registrar empresa
+    Route::post('/companies', [CompanyController::class, 'store']);
+    Route::get('/companies', [CompanyController::class, 'index']);
+    Route::get('/companies/{company}', [CompanyController::class, 'show']);
+    Route::put('/companies/{company}', [CompanyController::class, 'update']);
+    Route::delete('/companies/{company}', [CompanyController::class, 'destroy']);
 });
