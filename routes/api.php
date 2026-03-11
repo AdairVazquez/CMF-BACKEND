@@ -1,6 +1,14 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AttendanceController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BranchController;
+use App\Http\Controllers\Api\V1\CompanyController;
+use App\Http\Controllers\Api\V1\DepartmentController;
+use App\Http\Controllers\Api\V1\DeviceController;
+use App\Http\Controllers\Api\V1\EmployeeController;
+use App\Http\Controllers\Api\V1\LeaveRequestController;
+use App\Http\Controllers\Api\V1\ReportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -60,8 +68,32 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(functio
     Route::post('/auth/two-factor/confirm', [AuthController::class, 'confirm2FA']);
     Route::post('/auth/two-factor/disable', [AuthController::class, 'disable2FA']);
     
-    // Rutas con tenant scope (se agregarán después)
-    // Route::middleware('tenant.scope')->group(function () {
-    //     // Empresas, sucursales, empleados, etc.
-    // });
+    // ─── Empresas ─────────────────────────────────────────────────────────────
+    Route::get('/companies', [CompanyController::class, 'index']);
+    Route::get('/companies/{id}', [CompanyController::class, 'show']);
+
+    // ─── Empleados ────────────────────────────────────────────────────────────
+    Route::get('/employees', [EmployeeController::class, 'index']);
+    Route::get('/employees/{id}', [EmployeeController::class, 'show']);
+
+    // ─── Sucursales ───────────────────────────────────────────────────────────
+    Route::get('/branches', [BranchController::class, 'index']);
+
+    // ─── Departamentos ────────────────────────────────────────────────────────
+    Route::get('/departments', [DepartmentController::class, 'index']);
+
+    // ─── Dispositivos ─────────────────────────────────────────────────────────
+    Route::get('/devices', [DeviceController::class, 'index']);
+    Route::get('/devices/events/recent', [DeviceController::class, 'recentEvents']);
+
+    // ─── Asistencia ───────────────────────────────────────────────────────────
+    Route::get('/attendance/today', [AttendanceController::class, 'today']);
+    Route::get('/attendance/{employeeId}', [AttendanceController::class, 'employee']);
+
+    // ─── Solicitudes de ausencia ──────────────────────────────────────────────
+    Route::get('/leave-requests', [LeaveRequestController::class, 'index']);
+    Route::get('/leave-requests/{id}', [LeaveRequestController::class, 'show']);
+
+    // ─── Reportes ─────────────────────────────────────────────────────────────
+    Route::get('/reports/attendance/weekly', [ReportController::class, 'attendanceWeekly']);
 });
