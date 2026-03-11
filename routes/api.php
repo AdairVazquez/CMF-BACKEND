@@ -1,5 +1,6 @@
 <?php
 
+<<<<<<< HEAD
 use App\Http\Controllers\Api\V1\AttendanceController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BranchController;
@@ -9,6 +10,13 @@ use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\EmployeeController;
 use App\Http\Controllers\Api\V1\LeaveRequestController;
 use App\Http\Controllers\Api\V1\ReportController;
+=======
+<<<<<<< HEAD
+use App\Http\Controllers\Api\V1\AuthController;
+=======
+use App\Http\Controllers\Api\BranchController;
+>>>>>>> 034424d (Endpoint Branches)
+>>>>>>> ba058bc (Endpoint Branches)
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CompanyController;
 
@@ -109,11 +117,19 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(functio
 
 
 Route::prefix('v1')->group(function () {
-    
-    // Ruta para registrar empresa
+
+    // Companie's endopoints
     Route::post('/companies', [CompanyController::class, 'store']);
     Route::get('/companies', [CompanyController::class, 'index']);
     Route::get('/companies/{company}', [CompanyController::class, 'show']);
     Route::put('/companies/{company}', [CompanyController::class, 'update']);
     Route::delete('/companies/{company}', [CompanyController::class, 'destroy']);
+
+    // Branche's endpoints
+    Route::get('/branches', [BranchController::class, 'index']);
+    Route::post('/branches', [BranchController::class, 'store']);
+    Route::get('/branches/{branch}', [BranchController::class, 'show']);
+    Route::put('/branches/{branch}', [BranchController::class, 'update']);
+    Route::delete('/branches/{branch}', [BranchController::class, 'destroy']);
+
 });
