@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\BranchController;
+use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\V1\AuthController;
 use Illuminate\Support\Facades\Route;
 
