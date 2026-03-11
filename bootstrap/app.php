@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // API pura: nunca redirigir a login, siempre responder JSON 401
+        $middleware->redirectGuestsTo(fn () => null);
+
         // Registrar middleware personalizados
         $middleware->alias([
             'tenant.scope' => \App\Http\Middleware\TenantScope::class,

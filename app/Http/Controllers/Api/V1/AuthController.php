@@ -11,6 +11,7 @@ use App\Http\Requests\Auth\TwoFactorConfirmRequest;
 use App\Http\Requests\Auth\TwoFactorDisableRequest;
 use App\Http\Requests\Auth\TwoFactorRecoveryRequest;
 use App\Http\Requests\Auth\TwoFactorVerifyRequest;
+use App\Http\Requests\Auth\VerifyResetCodeRequest;
 use App\Services\AuthService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -44,16 +45,17 @@ class AuthController extends Controller
             );
         }
 
-        if (isset($result['requires_2fa']) && $result['requires_2fa']) {
+        // Primer login sin 2FA: igual que flujo 2FA normal, solo token temporal
+        if (!empty($result['requires_2fa_setup'])) {
             return $this->successResponse([
-                'requires_2fa' => true,
-                'token' => $result['token'],
+                'requires_2fa_setup' => true,
+                'token'              => $result['token'],
             ], $result['message']);
         }
 
         return $this->successResponse([
             'token' => $result['token'],
-            'user' => $result['user'],
+            'user'  => $result['user'],
         ], $result['message']);
     }
 
@@ -72,8 +74,9 @@ class AuthController extends Controller
         }
 
         return $this->successResponse([
-            'token' => $result['token'],
-            'user' => $result['user'],
+            'token'    => $result['token'],
+            'user'     => $result['user'],
+            'is_setup' => $result['is_setup'] ?? false,
         ], $result['message']);
     }
 
@@ -99,13 +102,17 @@ class AuthController extends Controller
     }
 
     /**
-     * Habilitar 2FA por correo (envía código al email)
+     * Iniciar configuración de 2FA con TOTP (retorna QR code para escanear con app autenticadora)
      */
     public function enable2FA(Request $request): JsonResponse
     {
         $result = $this->authService->enable2FA($request->user());
 
-        return $this->successResponse(null, $result['message']);
+        if (!$result['success']) {
+            return $this->errorResponse($result['message'], [], 400);
+        }
+
+        return $this->successResponse([], $result['message']);
     }
 
     /**
@@ -122,9 +129,7 @@ class AuthController extends Controller
             return $this->errorResponse($result['message'], [], 400);
         }
 
-        return $this->successResponse([
-            'recovery_codes' => $result['recovery_codes'],
-        ], $result['message']);
+        return $this->successResponse([], $result['message']);
     }
 
     /**
@@ -180,13 +185,32 @@ class AuthController extends Controller
     }
 
     /**
-     * Restablecer contraseña con código
+     * Verificar código de recuperación y obtener reset_token temporal
+     */
+    public function verifyResetCode(VerifyResetCodeRequest $request): JsonResponse
+    {
+        $result = $this->authService->verifyResetCode(
+            email: $request->email,
+            code: $request->code
+        );
+
+        if (!$result['success']) {
+            return $this->errorResponse($result['message'], [], 400);
+        }
+
+        return $this->successResponse([
+            'reset_token' => $result['reset_token'],
+            'expires_at'  => $result['expires_at'],
+        ], $result['message']);
+    }
+
+    /**
+     * Restablecer contraseña usando reset_token (obtenido desde verify-reset-code)
      */
     public function resetPassword(ResetPasswordRequest $request): JsonResponse
     {
         $result = $this->authService->resetPassword(
-            email: $request->email,
-            code: $request->code,
+            resetToken: $request->reset_token,
             newPassword: $request->password
         );
 

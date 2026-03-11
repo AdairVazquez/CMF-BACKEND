@@ -15,9 +15,8 @@ class ResetPasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'email'],
-            'code' => ['required', 'string', 'size:6'],
-            'password' => ['required', 'confirmed', Password::min(8)
+            'reset_token' => ['required', 'string', 'uuid'],
+            'password'    => ['required', 'confirmed', Password::min(8)
                 ->mixedCase()
                 ->numbers()
                 ->symbols()
@@ -28,16 +27,14 @@ class ResetPasswordRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.required' => 'El email es obligatorio',
-            'email.email' => 'El email debe ser válido',
-            'code.required' => 'El código es obligatorio',
-            'code.size' => 'El código debe tener 6 dígitos',
-            'password.required' => 'La contraseña es obligatoria',
-            'password.confirmed' => 'Las contraseñas no coinciden',
-            'password.min' => 'La contraseña debe tener al menos 8 caracteres',
-            'password.mixed_case' => 'La contraseña debe contener mayúsculas y minúsculas',
-            'password.numbers' => 'La contraseña debe contener números',
-            'password.symbols' => 'La contraseña debe contener caracteres especiales',
+            'reset_token.required' => 'El token de recuperación es obligatorio',
+            'reset_token.uuid'     => 'El token de recuperación no es válido',
+            'password.required'    => 'La contraseña es obligatoria',
+            'password.confirmed'   => 'Las contraseñas no coinciden',
+            'password.min'         => 'La contraseña debe tener al menos 8 caracteres',
+            'password.mixed_case'  => 'La contraseña debe contener mayúsculas y minúsculas',
+            'password.numbers'     => 'La contraseña debe contener números',
+            'password.symbols'     => 'La contraseña debe contener caracteres especiales',
         ];
     }
 }
