@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\Api\BranchController;
-use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\V1\BranchController;
+use App\Http\Controllers\Api\V1\CompanyController;
+use App\Http\Controllers\Api\V1\DepartmentController;
 use App\Http\Controllers\Api\V1\AuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -46,6 +47,7 @@ Route::prefix('v1')->group(function () {
     // Endpoint para dispositivos NFC (se implementará después)
     // Route::post('/nfc/register', [NfcController::class, 'register'])
     //     ->middleware('throttle:nfc');
+
 });
 
 // Rutas protegidas (requieren autenticación con Sanctum)
@@ -77,6 +79,15 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(functio
     Route::get('/branches/{branch}', [BranchController::class, 'show']);
     Route::put('/branches/{branch}', [BranchController::class, 'update']);
     Route::delete('/branches/{branch}', [BranchController::class, 'destroy']);
+
+    //  Department's endpoints
+    Route::get('/departments', [DepartmentController::class, 'index']);
+    Route::post('/departments', [DepartmentController::class, 'store']);
+    Route::put('/departments/{department}', [DepartmentController::class, 'update']);
+    Route::get('/departments/{department}', [DepartmentController::class, 'show']);
+    Route::delete('/departments/{department}', [DepartmentController::class, 'destroy']);
+
+    
 
     // Rutas con tenant scope (se agregarán después)
     // Route::middleware('tenant.scope')->group(function () {
