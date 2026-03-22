@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\BranchController;
 use App\Http\Controllers\Api\V1\CompanyController;
 use App\Http\Controllers\Api\V1\DepartmentController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\EmployeeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -87,7 +88,12 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(functio
     Route::get('/departments/{department}', [DepartmentController::class, 'show']);
     Route::delete('/departments/{department}', [DepartmentController::class, 'destroy']);
 
-    
+    //  Employee's endpoints
+    Route::get('/employee', [EmployeeController::class, 'index']);
+    Route::post('/employee', [EmployeeController::class, 'store']);
+    Route::put('/employee/{employee}', [EmployeeController::class, 'update']);
+    Route::get('/employee/{employee}', [EmployeeController::class, 'show']);
+    Route::delete('/employee/{employee}', [EmployeeController::class, 'destroy']);
 
     // Rutas con tenant scope (se agregarán después)
     // Route::middleware('tenant.scope')->group(function () {
