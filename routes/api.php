@@ -101,10 +101,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(functio
 
 
     Route::get('/users', [UserController::class, 'index']);
-    Route::post('/user', [EmployeeController::class, 'store']);
-    Route::put('/user/{user}', [EmployeeController::class, 'update']);
-    Route::get('/user/{user}', [EmployeeController::class, 'show']);
-    Route::delete('/user/{user}', [EmployeeController::class, 'destroy']);
+    Route::post('/user', [UserController::class, 'store']);
+    Route::put('/user/{user}', [UserController::class, 'update']);
+    Route::get('/user/{user}', [UserController::class, 'show']);
+    Route::delete('/users/{user}', [UserController::class, 'destroy']);
 
     // Rutas con tenant scope (se agregarán después)
     // Route::middleware('tenant.scope')->group(function () {
