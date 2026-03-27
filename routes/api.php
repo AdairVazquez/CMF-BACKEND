@@ -5,7 +5,10 @@ use App\Http\Controllers\Api\V1\CompanyController;
 use App\Http\Controllers\Api\V1\DepartmentController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\EmployeeController;
+use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Api\V1\NfcController;
 
 /*
 |--------------------------------------------------------------------------
@@ -94,6 +97,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(functio
     Route::put('/employee/{employee}', [EmployeeController::class, 'update']);
     Route::get('/employee/{employee}', [EmployeeController::class, 'show']);
     Route::delete('/employee/{employee}', [EmployeeController::class, 'destroy']);
+
+
+
+    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/user', [EmployeeController::class, 'store']);
+    Route::put('/user/{user}', [EmployeeController::class, 'update']);
+    Route::get('/user/{user}', [EmployeeController::class, 'show']);
+    Route::delete('/user/{user}', [EmployeeController::class, 'destroy']);
 
     // Rutas con tenant scope (se agregarán después)
     // Route::middleware('tenant.scope')->group(function () {
