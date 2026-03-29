@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Endpoints;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class StoreCompanyController extends FormRequest
+class StoreCompanyRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,7 +24,7 @@ class StoreCompanyController extends FormRequest
     {
         return [
             'name'       => 'required|string|max:255',
-            'legal_name' => 'required|string|max:255',
+            'legal_name' => 'required|string|max:255', 
             'tax_id'     => 'nullable|string|max:255',
             'email'      => 'required|email|unique:companies,email',
             'phone' => [

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreCompanyController;
+use App\Http\Requests\Endpoints\StoreCompanyRequest;
 use App\Http\Requests\UpdateCompanyController;
 use App\Models\Company;
 use Illuminate\Http\JsonResponse;
@@ -36,7 +36,7 @@ class CompanyController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreCompanyController $request): JsonResponse
+    public function store(StoreCompanyRequest $request): JsonResponse
     {
         try {
             // 1. Obtener los datos ya validados por el Request
