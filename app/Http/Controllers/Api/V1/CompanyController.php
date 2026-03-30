@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Endpoints\StoreCompanyRequest;
-use App\Http\Requests\UpdateCompanyController;
+use App\Http\Requests\Endpoints\UpdateCompanyController;
 use App\Models\Company;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Exception;
-
+use Illuminate\Support\Facades\Storage;
 class CompanyController extends Controller
 {
     /**
@@ -44,15 +44,9 @@ class CompanyController extends Controller
 
             // 2. Manejo del Logo (Si se subió un archivo)
             if ($request->hasFile('logo')) {
-                // Generamos un nombre único para evitar que se sobrescriban
-                $file = $request->file('logo');
-                $fileName = time() . '_' . $file->getClientOriginalName();
-
-                // Lo movemos a public/logos
-                $file->move(public_path('logos'), $fileName);
-
-                // Guardamos la ruta relativa en el array de datos
-                $data['logo'] = 'logos/' . $fileName;
+                // Usamos el disco 'public' para consistencia. 
+                // Esto guarda en storage/app/public/logos y funciona con Storage::delete()
+                $data['logo'] = $request->file('logo')->store('logos', 'public');
             }
 
             // 3. Crear la empresa en la base de datos
@@ -99,34 +93,39 @@ class CompanyController extends Controller
     /**
      * Update the specified resource in storage.
      */
+
     public function update(UpdateCompanyController $request, Company $company): JsonResponse
     {
         try {
+            // Validamos los datos
             $data = $request->validated();
 
-            // Si mandan un nuevo logo, borramos el anterior (opcional) y subimos el nuevo
+            // Si llega un nuevo logo, reemplazar el anterior
             if ($request->hasFile('logo')) {
-                $file = $request->file('logo');
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $file->move(public_path('logos'), $fileName);
-                $data['logo'] = 'logos/' . $fileName;
+                // Borrar logo anterior si existe
+                if ($company->logo) {
+                    Storage::disk('public')->delete($company->logo);
+                }
+
+                // Subir el nuevo logo al disco 'public/logos'
+                $data['logo'] = $request->file('logo')->store('logos', 'public');
             }
 
+            // Actualizar la empresa con los datos nuevos
             $company->update($data);
 
             return response()->json([
-                'status'  => 'success',
+                'status' => 'success',
                 'message' => 'Empresa actualizada correctamente.',
-                'data'    => $company
+                'data' => $company
             ]);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Error al actualizar: ' . $e->getMessage()
             ], 500);
         }
     }
-
     /**
      * Remove the specified resource from storage.
      */
@@ -134,8 +133,8 @@ class CompanyController extends Controller
     {
         try {
             // 1. Opcional: Eliminar el archivo del logo del disco para no dejar basura
-            if ($company->logo && file_exists(public_path($company->logo))) {
-                unlink(public_path($company->logo));
+            if ($company->logo) {
+                Storage::disk('public')->delete($company->logo);
             }
 
             // 2. Eliminar el registro de la base de datos

@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Endpoints;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateCompanyController extends FormRequest
 {
@@ -27,10 +28,10 @@ class UpdateCompanyController extends FormRequest
         return [
             'name'       => 'sometimes|required|string|max:255',
             'legal_name' => 'sometimes|required|string|max:255',
-            'tax_id'     => 'sometimes|required|string|max:255',
+            'tax_id' => ['sometimes', 'required', 'string', 'max:255', Rule::unique('companies', 'tax_id')->ignore($companyId),],
             // 'ignore' permite que el registro actual mantenga su email
             'email'      => "sometimes|required|email|unique:companies,email,{$companyId}",
-            'phone'      => 'sometimes|required|string|min:10|max:15',
+            'phone'      => 'sometimes|required|string|min:10|max:18',
             'address'    => 'sometimes|required|string|max:255',
             'logo'       => 'nullable|file|mimes:svg,xml|max:2048',
             'plan'       => 'sometimes|required|string|max:255',

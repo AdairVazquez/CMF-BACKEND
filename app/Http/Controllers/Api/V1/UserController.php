@@ -93,7 +93,6 @@ class UserController extends Controller
                 $data['password'] = bcrypt($data['password']);
             }
             $user->update($data);
-            $user->update($data);
             return response()->json([
                 'status'  => 'success',
                 'message' => 'Empleado actualizado correctamente.',
@@ -123,7 +122,7 @@ class UserController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Error al intentar eliminar la sucursal: ' . $e->getMessage()
+                'message' => 'Error al intentar eliminar el empleado: ' . $e->getMessage()
             ], 500);
         }
     }
