@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Endpoints\StoreUserRequest;
 use App\Http\Requests\Endpoints\UpdateUserRequest;
-use App\Http\Requests\StoreUserRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Exception;
@@ -87,9 +87,13 @@ class UserController extends Controller
     {
         try {
             $data = $request->validated();
-
+            if (empty($data['password'])) {
+                unset($data['password']);
+            } else {
+                $data['password'] = bcrypt($data['password']);
+            }
             $user->update($data);
-
+            $user->update($data);
             return response()->json([
                 'status'  => 'success',
                 'message' => 'Empleado actualizado correctamente.',

@@ -98,8 +98,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(functio
     Route::get('/employee/{employee}', [EmployeeController::class, 'show']);
     Route::delete('/employee/{employee}', [EmployeeController::class, 'destroy']);
 
-
-
     Route::get('/users', [UserController::class, 'index']);
     Route::post('/user', [UserController::class, 'store']);
     Route::put('/user/{user}', [UserController::class, 'update']);
