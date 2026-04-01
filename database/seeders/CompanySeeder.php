@@ -6,11 +6,13 @@ use App\Enums\CompanyStatus;
 use App\Models\Company;
 use App\Models\CompanyModule;
 use Illuminate\Database\Seeder;
-
+use Carbon\Carbon;
 class CompanySeeder extends Seeder
 {
+
     public function run(): void
     {
+        $yesterday = Carbon::yesterday();
         // Empresa 1: Hospital Central
         $hospital = Company::firstOrCreate(
             ['email' => 'admin@hospitalcentral.com'],
@@ -25,7 +27,7 @@ class CompanySeeder extends Seeder
                 'timezone' => 'America/Mexico_City',
                 'modules' => [Company::MODULE_ASISTENCIA, Company::MODULE_REPORTES, Company::MODULE_AUSENCIAS, Company::MODULE_DISPOSITIVOS],
                 'trial_ends_at' => null,
-                'subscription_ends_at' => now()->addYear(),
+                'subscription_ends_at' => $yesterday->copy()->subYear(),
             ]
         );
 

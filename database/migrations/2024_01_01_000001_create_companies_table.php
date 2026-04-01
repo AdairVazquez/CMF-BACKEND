@@ -23,6 +23,7 @@ return new class extends Migration
             $table->json('modules')->nullable(); // Módulos premium activos
             $table->date('trial_ends_at')->nullable();
             $table->date('subscription_ends_at')->nullable();
+            $table->date('disabled_at')->nullable(); // Fecha de deshabilitación (
             $table->timestamps();
             $table->softDeletes();
 

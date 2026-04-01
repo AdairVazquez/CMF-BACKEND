@@ -32,6 +32,7 @@ class Company extends Model
         'modules',
         'trial_ends_at',
         'subscription_ends_at',
+        'disabled_at',
     ];
 
     protected $casts = [
@@ -39,6 +40,7 @@ class Company extends Model
         'modules' => 'array',
         'trial_ends_at' => 'date',
         'subscription_ends_at' => 'date',
+        'disabled_at' => 'date',
     ];
 
     protected $hidden = ['deleted_at'];
