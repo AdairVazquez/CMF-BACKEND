@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Models\Company;
 use Carbon\Carbon;
 use App\Enums\CompanyStatus;
+
 class AssingDisableDate extends Command
 {
     /**
@@ -32,13 +33,18 @@ class AssingDisableDate extends Command
         $today = Carbon::today();
         $companies = Company::all();
         foreach ($companies as $company) {
-            if ($company->subscription_ends_at && $company->subscription_ends_at->lte($today)) {
-                $company->status = CompanyStatus::INACTIVO;
-                $company->disabled_at = $today;
-                $company->save();
-                $companiesDisabled[] = $company->name;
+            if (!isset($company->disabled_at)) {
+                $this->info('Empresa no tiene fecha de deshabilitación: ' . $company->name);
+                if ($company->subscription_ends_at && $company->subscription_ends_at->lte($today)) {
+                    $company->status = CompanyStatus::INACTIVO;
+                    $company->disabled_at = $today;
+                    $company->save();
+                    $companiesDisabled[] = $company->name;
+                } else {
+                    $companiesEnabled[] = $company->name;
+                }
             } else {
-                $companiesEnabled[] = $company->name;
+                $this->info('Empresa ya tiene fecha de deshabilitación: ' . $company->name);
             }
         }
         $this->info('Empresas deshabilitadas: ' . implode(', ', $companiesDisabled));
