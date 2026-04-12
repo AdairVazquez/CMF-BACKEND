@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Api\V1\NfcController;
+use App\Http\Controllers\Api\V1\RolController;
 
 /*
 |--------------------------------------------------------------------------
@@ -68,7 +69,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(functio
     Route::post('/auth/two-factor/confirm', [AuthController::class, 'confirm2FA']);
     Route::post('/auth/two-factor/disable', [AuthController::class, 'disable2FA']);
 
-
+    //rol's endpoints
+    Route::get('/roles', [RolController::class, 'index']);
 
     // Companie's endopoints
     Route::post('/companies', [CompanyController::class, 'store']);
