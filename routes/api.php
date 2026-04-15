@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\V1\RolController;
 
 // Rutas públicas (sin autenticación)
 Route::prefix('v1')->group(function () {
+    Route::post('/companies', [CompanyController::class, 'store']);
 
     // Health Check (público)
     Route::get('/system/health', [\App\Http\Controllers\Api\V1\SystemHealthController::class, 'health'])
@@ -73,7 +74,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(functio
     Route::get('/roles', [RolController::class, 'index']);
 
     // Companie's endopoints
-    Route::post('/companies', [CompanyController::class, 'store']);
     Route::get('/companies', [CompanyController::class, 'index']);
     Route::get('/companies/{company}', [CompanyController::class, 'show']);
     Route::put('/companies/{company}', [CompanyController::class, 'update']);

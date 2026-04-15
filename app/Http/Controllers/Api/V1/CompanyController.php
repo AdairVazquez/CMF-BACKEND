@@ -44,20 +44,22 @@ class CompanyController extends Controller
 
             // 2. Manejo del Logo (Si se subió un archivo)
             if ($request->hasFile('logo')) {
-                // Usamos el disco 'public' para consistencia. 
+                // Usamos el disco 'public' para consistencia.
                 // Esto guarda en storage/app/public/logos y funciona con Storage::delete()
                 $data['logo'] = $request->file('logo')->store('logos', 'public');
             }
 
+            dd($request->validated());
+
             // 3. Crear la empresa en la base de datos
             // Nota: Gracias al $casts en el modelo, 'modules' se guarda como JSON automáticamente
-            $company = Company::create($data);
+            //$company = Company::create($data);
 
             // 4. Respuesta exitosa (201 Created)
             return response()->json([
                 'status'  => 'success',
                 'message' => 'Empresa registrada correctamente.',
-                'data'    => $company
+                // 'data'    => $company ;
             ], 201);
         } catch (Exception $e) {
             // 5. Registro del error en los logs (storage/logs/laravel.log)
